@@ -1,0 +1,62 @@
+---
+title: "Countries Codebook"
+author: "Duu Renn" # Change this
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  pdf_document: 
+    number_sections: yes
+    toc: yes
+---
+
+```{r include=FALSE, cache=FALSE}
+# We'll talk about these options later. 
+require(knitr)
+opts_chunk$set(
+  tidy=TRUE,     # display code as typed # Changed to true because my comments are too long
+  tidy.opts=list(width.cutoff=75),
+  size="small",    # slightly smaller font for code
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132, 
+  size='footnotesize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA)
+```
+
+# The Countries Dataset
+The 'Countries' dataset is a smaller version of a dataset by Pippa Norris. The [codebook](http://www.jakebowers.org/Data/Countries/Democracy%2520Crossnational%2520Codebook%2520March%25202009.pdf) has variable descriptions, but we will briefly practice describing these variables some more here so that you are able to use Rmarkdown with Political Science data.  
+
+# Load the Dataset
+```{r}
+load(url("http://www.jakebowers.org/Data/countries.rda"))
+```
+
+# Code: What variables are contained in this dataset? 
+```{r}
+
+```
+
+# Explain: Pick a variable and past its codebook description here. 
+
+# Code: Describe the contents of the variable appropriately. 
+```{r}
+
+```
+
+# Code: Provide a figure that helps describe the distribution of the variable. 
+```{r}
+
+```
+
+
+# Complete and Review
+- Compile this document using the 'knit' option in RStudio. 
+- Submit a pull request. 
+
+
