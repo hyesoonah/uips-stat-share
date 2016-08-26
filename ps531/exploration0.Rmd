@@ -1,0 +1,228 @@
+---
+title: 'Exploration 0: Statistical Inference Review'
+author: "Jake Bowers"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    number_sections: yes
+    toc: yes
+geometry: margin=1in
+graphics: yes
+mainfont: Minion Pro
+fontsize: 10pt
+---
+
+```{r opts, include=FALSE, cache=FALSE}
+require(knitr)
+
+opts_chunk$set(
+  tidy=TRUE,
+  tidy.opts=list(width.cutoff=75),
+  size="small",
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132, 
+  size='footnotesize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  warning=FALSE,
+  comment=NA)
+```
+
+```{r initialize,echo=FALSE}
+##First, just setup the R environment for today:
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+options(error=function(){options(prompt="> ",continue="+ ");NULL})
+```
+
+Imagine that an old friend calls. She is now in charge of Countering Violent
+Extremism and Improving Civil Society programs at the United Nations. She
+tells you that she happened to hear that you are a specialist in political
+science from a mutual friend and that she needs your help. She has been asked
+to write a report called "Ten Years after the London Bombing of 2005", and,
+although she has hired some data analysts, she is having trouble understanding
+exactly what they are doing. You gather that, in fact, at least one of her
+data analysts has left the UN and your high powered UN official friends has an
+important report due but has no technical help.
+
+Here is what she asks:
+
+Did the London Subway and Bus bombings of July 2005 change the civic
+activity of people in the UK? The UK Home Office had a survey in the field
+in 2005. Because of confidentiality requirements she can only share a sample
+of 1000 of these people.
+
+She sends you some code that she says she found after, "they confiscated her
+machine". You ask, "Who confiscated whose machine?" And your friend replies,
+"I can't say. But can you help? I need to understand what is going on here."
+
+
+```{r}
+load(url("http://jakebowers.org/Data/ho05.rda"))
+```
+
+\begin{small}
+\begin{verbatim}
+  ### CODEBOOK
+  postbomb: 1=interviewed after the bombing, 0=interviewed before the bombing
+
+  grphrs: 6.1.1 Which of the following groups, clubs or organisations
+    have you been involved with during the last 12 months? That's anything
+    you've taken part in, supported, or that you've helped in any way, either
+    on your own or with others. Please exclude giving money and anything that
+    was a requirement of your job.
+
+    6.1.2 In the last 12 months have you given unpaid help to any groups, clubs or
+    organisations in any of the following ways?
+
+    6.1.5 Approximately how many hours have you spent helping this/these group(s),
+    club(s) or organisation(s) in the past 4 weeks?
+
+  infhrs: In the last 12 months have you done any of the following things,
+    unpaid, for someone who was not a relative?
+
+    This is any unpaid help you, as an individual, may have given to other people,
+    that is apart from any help given through a group, club or organisation. This
+    could be help for a friend, neighbour or someone else but not a relative.
+
+    6.4.4 Now just thinking about the past 4 weeks. Approximately how many hours
+    have you spent doing this kind of thing/these kind of things in the past 4
+    weeks?
+
+  hlphrs: grphrs+infhrs
+\end{verbatim}
+\end{small}
+
+
+```{r}
+## Aarrgh make data with no missing data on outcomes
+wrkdat<-ho05[!is.na(ho05$hlphrs),]
+```
+
+After you ponder this codebook, you ask, "Why did your analyst put 'aaargh'
+into the code?" Your friend says, "That is not important. When I asked my data
+analyst to tell me the effect of the bombings on civic life in the UK, she
+gave me this next piece of code and output. How does this answer my question? I didn't ask for a
+coefficient!! Can you show me how to get this number in a way that is simpler?
+Why use averages anyway? What is going on here?"
+
+```{r}
+effectlm<-lm(hlphrs~postbomb,data=wrkdat) ## the linear model
+coef(effectlm) ## coefficients
+```
+
+She continues, "One of my subordinate always brags about his statistics
+abilities at parties. So I asked him to help me interpret
+this number, he said, `Well, you can't trust this coefficient because your
+dependent variable is not Normal.' I didn't understand and so, the next day I
+asked my main analyst to explain. She didn't get a chance to explain but the
+agents recovered this from her computer:"
+
+
+```{r, eval = F}
+## Outcome distribution
+summary(wrkdat$hlphrs)
+plot(density(wrkdat$hlphrs))
+rug(wrkdat$hlphrs)
+```
+
+"Why would the analyst or those managing her as an asset want to know about
+the distribution of voluntarism?"
+
+You ask, "What do you mean...`those managing her as an asset'?"
+
+She says, "Oh! I...I... meant that she was a real asset to me as a manager in
+my organization. Anyway, what about the question whether people in the UK are
+Normal or not normal or whatever? Why should I care about this? Why shouldn't
+I want the original number that I got in the first place (now that I
+understand what was going on)? By the way, when I asked this question of two
+different analysts, I got two different hunks of code. I get the sense that
+there are two issues with the `normal/not-normal' question. Also, I am being
+driven crazy by people sending me emails with R code in them. Help!"
+
+"Here is the code from Analyst 1. What is the issue that he is responding to?
+Why more coefficients here? How are these coefficients telling us about
+effects?"
+
+```{r}
+# install.packages("quantreg")
+require(quantreg)
+effectRq<-rq(hlphrs~postbomb,data=wrkdat,tau=.5) # tau=.5 is middle quantile
+coef(effectRq) ## coefficients
+```
+
+"Here is the code from Analyst 2: What is she doing? Why? What do her comments
+about a `CLT' mean?"
+
+```{r}
+permuteFn<-function(y){
+  shuffledBombing<-sample(wrkdat$postbomb)
+  meandiff<-coef(lm(y~shuffledBombing))[["shuffledBombing"]]
+  return(meandiff)
+}
+```
+
+```{r, cache=T}
+set.seed(20150101)
+results<-replicate(10000,permuteFn(y=wrkdat$hlphrs))
+mean(results)
+
+```
+
+```{r, fig.width=8, fig.height=4, out.width=".5\\textwidth", message=T, warning=T, eval = F}
+par(mfrow=c(1,2),oma=rep(0,4),mgp=c(1.5,.5,0),pty="s")
+plot(density(results/sd(results)),xlab="Mean Diffs")
+curve(dnorm(x,sd=1,mean=0),from=-4,to=4,col="blue",add=TRUE) ## CLT ok.
+obscoef<-coef(effectlm)[[2]]
+rug(obscoef,lwd=3,ticksize=.5)
+
+qqnorm(results/sd(results))
+qqline(results/sd(results))
+```
+
+```{r, eval = F}
+pnorm(obscoef,sd=1,mean=0,lower.tail=FALSE) # p-value
+2*(min( c( pnorm(obscoef,sd=1,mean=0),1-pnorm(obscoef,sd=1,mean=0) )))
+summary(effectlm)$coef[2,c(1,4)]
+
+```
+
+"Thanks so much for all of your help! Now I do see that the mention of
+`Normal' referred to two different problems. Now I have one last question:  "I
+also asked my analyst to tell me how people in London acted compared to people
+in other parts of the UK. After all, the bombings occurred in London. But I
+got more crazy coefficients. Can you help? Can you show me how to get these
+numbers without using any commands like `lm`?"
+
+```{r}
+wrkdat$london<-factor(wrkdat$GOR=="London",labels=c("Not London","London"))
+## test the recode
+with(wrkdat,table(london,GOR=="London",useNA="ifany"))
+
+effectsBySubGroupsLm<-lm(hlphrs~london*postbomb,data=wrkdat)
+coef(effectsBySubGroupsLm)
+```
+
